@@ -89,12 +89,11 @@ print("Poblacion Inicial:\n%s"%(population)) #Se muestra la poblacion inicial
   
   
 #Se evoluciona la poblacion
-for i in range(20):
+for i in range(100):
     population = selection_and_reproduction(population)
     population = mutation(population)
-    print("Pobalcion "+str(i)+":\n%s"%(population))
-  
-  
+    print("Generacion "+str(i+1)+":\n%s"%(population))
+    
 print("\nPoblacion Final:\n%s"%(population)) #Se muestra la poblacion evolucionada
 print("\n\n")
 
