@@ -4,7 +4,7 @@ class Graph:
     def __init__(self,n):
         self.n=n
         self.nodes=[]
-        for i in range(0,n):
+        for i in range(n):
             self.new_node(random.randint(1, 3))
         self.edges=[]
         
@@ -40,4 +40,8 @@ class Edge:
         self.j=j
         
     def __str__(self):
+        return "("+str(self.i)+", "+str(self.j)+")"
+    def __unicode__(self):
+        return "("+str(self.i)+", "+str(self.j)+")"
+    def __repr__(self):
         return "("+str(self.i)+", "+str(self.j)+")"
