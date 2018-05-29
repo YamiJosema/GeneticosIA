@@ -10,6 +10,11 @@ class Graph:
         
     def new_node(self, color):
         self.nodes.append(Node(color))
+    
+    def set_nodes(self, nodes):
+        self.nodes=[]
+        for n in nodes:
+            self.nodes.append(Node(n))
         
     def new_edge(self, i, j):
         self.edges.append(Edge(i,j))
@@ -20,6 +25,8 @@ class Graph:
         return str(self.nodes)
     def __repr__(self):
         return str(self.nodes)
+    def __getitem__(self):
+        return self.nodes
 
 
 class Node:
@@ -32,6 +39,8 @@ class Node:
         return str(self.color)
     def __repr__(self):
         return str(self.color)
+    def __getitem__(self):
+        return self.color
 
 
 class Edge:   

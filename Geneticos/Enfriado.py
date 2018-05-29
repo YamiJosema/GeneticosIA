@@ -1,11 +1,17 @@
 import random
 from Geneticos.Modelo import *
+import math
+import csv
 
 n = 10 #numero de paises. Podra ser variable
 k = 3 #numero de colores
 #el gen sera una lista en las que i=pais y lista[i]=color
 
-EDGE_CHANCE = 0.1
+TEMPERATURE_START = 8
+TEMPERATURE_END = 0.1
+COOLING_FACTOR = 0.999
+EDGE_CHANCE = 0.15
+R_EDGES = []
 
   
 # modelo = [1,2,3,2,1,2,3,1,2,3] #Objetivo a alcanzar
@@ -13,6 +19,7 @@ EDGE_CHANCE = 0.1
 pressure = int(n/3) #Cuantos individuos se seleccionan para reproduccion. Necesariamente mayor que 2
 #pressure deber ser un 30% del total de individuos
 mutation_chance = 0.1 #La probabilidad de que un individuo mute
+
   
 # print("\n\nModelo: %s\n"%(modelo)) #Mostrar el modelo, con un poco de espaciado
 
@@ -22,6 +29,7 @@ def edges(paises):
         for j in range(paises):
             if i!=j and random.random() <= EDGE_CHANCE:
                 edges.append(Edge(i,j))
+    
     return edges
 
 
@@ -29,10 +37,15 @@ def individual(paises):
     """
         Crea una poblacion nueva de individuos
     """
-    graph = Graph(paises) 
+    graph = Graph(paises)
     
-    graph.edges=edges(paises)
-
+    
+    if len(R_EDGES)==0:
+        R_EDGES.extend(edges(paises))
+        print("Aristas: %s"%(R_EDGES))
+    
+    graph.edges=R_EDGES
+    
     return  graph
 
 
@@ -47,10 +60,8 @@ def get_fitness(individual, n):
     fitness = 0
     for edge in individual.edges:
         nodes = individual.nodes
-        if nodes[edge.i].color!=nodes[edge.j].color:
-            fitness+=1
-        elif nodes[edge.i].color==nodes[edge.j].color:
-            fitness-=n
+        if nodes[edge.i].color==nodes[edge.j].color:
+            fitness+=n
             
 #     print(str(fitness)+"-->"+str(individual))
     return fitness
@@ -68,12 +79,12 @@ def selection_and_reproduction(population, paises):
   
     """
     fitness = [ (get_fitness(i,n), i) for i in population] #Calcula el fitness de cada individuo, y lo guarda en pares ordenados de la forma (5 , [1,2,1,1,4,1,8,9,4,1])
-    fitness = [i[1] for i in sorted(fitness)] #Ordena los pares ordenados y se queda solo con el array de valores
+    fitness = [i[1] for i in sorted(fitness, reverse=True)] #Ordena los pares ordenados y se queda solo con el array de valores
     population = fitness
   
     selected =  fitness[(len(fitness)-pressure):] #Esta linea selecciona los 'n' individuos del final, donde n viene dado por 'pressure'
     pprint =[(get_fitness(i,n), i) for i in selected]
-    print("Seleccion:\n%s"%(pprint)) #Se muestra la poblacion inicial
+    print("Seleccion:\n%s"%(pprint)) #Se muestra la seleccion
     
     #Se mezcla el material genetico para crear nuevos individuos
     for i in range(len(population)-pressure):
@@ -82,44 +93,76 @@ def selection_and_reproduction(population, paises):
           
         population[i].nodes[:punto] = padre[0].nodes[:punto] #Se mezcla el material genetico de los padres en cada nuevo individuo
         population[i].nodes[punto:] = padre[1].nodes[punto:]
-  
+        
     return population #El array 'population' tiene ahora una nueva poblacion de individuos, que se devuelven
 
 
-def mutation(population, paises):
-    """
-        Se mutan los individuos al azar. Sin la mutacion de nuevos genes nunca podria
-        alcanzarse la solucion.
-    """
+def cooldown(population, paises):
     for i in range(len(population)-pressure):
-        if random.random() <= mutation_chance: #Cada individuo de la poblacion (menos los padres) tienen una probabilidad de mutar
-            punto = random.randint(0,paises-1) #Se elgie un punto al azar
-            nuevo_valor = random.randint(1,3) #y un nuevo valor para este punto
-   
-            #Es importante mirar que el nuevo valor no sea igual al viejo
-            while nuevo_valor == population[i].nodes[punto]:
-                nuevo_valor = random.randint(1,3)
-   
-            #Se aplica la mutacion
-            population[i].nodes[punto].color = nuevo_valor
-   
+        ind = population[i].nodes[:]
+        fitness_previous = 1000000000
+        temperature = TEMPERATURE_START
+          
+        while temperature > TEMPERATURE_END:
+            mutated = mute(ind, paises)
+            fitness_new = get_fitness(population[i], paises)
+            difference = fitness_new-fitness_previous
+            if difference < 0 or math.exp(-difference/temperature)>random.random():
+                fitness_previous=fitness_new
+                ind = mutated
+            temperature *= COOLING_FACTOR
+               
+        population[i].set_nodes(ind)
+    
     return population
+            
 
+def mute(ind, paises):
+    punto = random.randint(0,paises-1) #Se elgie un punto al azar
+    nuevo_valor = random.randint(1,3) #y un nuevo valor para este punto
+    #Es importante mirar que el nuevo valor no sea igual al viejo
+    while nuevo_valor == ind[punto]:
+        nuevo_valor = random.randint(1,3)
+    #Se aplica la mutacion
+    ind[punto] = nuevo_valor
+    return ind
+
+
+def final(population):
+    res = False
+    for p in population:
+        if p[0]==0:
+            res=True
+            break
+    return res
+
+
+def get_solutions(population):
+    solutions = []
+    for p in population:
+        if p[0]==0:
+            solutions.append(p)
+    return solutions
+    
 
 population = create_population(n)#Inicializar una poblacion
 pprint =[(get_fitness(i,n), i) for i in population]
 print("Poblacion Inicial:\n%s"%(pprint)) #Se muestra la poblacion inicial
+print("\n")
 
    
 #Se evoluciona la poblacion
-for i in range(300):
+for i in range(100):
     population = selection_and_reproduction(population,n)
-    population = mutation(population, n)
+    population = cooldown(population, n)
     
     pprint =[(get_fitness(j,n), j) for j in population]
     print("Generacion "+str(i+1)+":\n%s"%(pprint))
+    if final(pprint):
+        break
    
    
 print("\nPoblacion Final:\n%s"%(pprint)) #Se muestra la poblacion evolucionada
+print("\nMejores soluciones:\n%s"%(get_solutions(pprint)))
 print("\n\n")
 
