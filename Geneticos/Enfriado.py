@@ -44,7 +44,7 @@ def individual(paises):
         R_EDGES.extend(edges(paises))
         print("Aristas: %s"%(R_EDGES))
     
-    graph.edges=R_EDGES
+    graph.set_edges(R_EDGES)
     
     return  graph
 
@@ -53,7 +53,7 @@ def create_population(paises):
     return [individual(paises) for i in range(paises)]
 
 
-def get_fitness(individual, n):
+def get_fitness(individual):
     """
         Calcula el fitness de un individuo concreto.
     """
@@ -61,13 +61,13 @@ def get_fitness(individual, n):
     for edge in individual.edges:
         nodes = individual.nodes
         if nodes[edge.i].color==nodes[edge.j].color:
-            fitness+=n
+            fitness+=individual.n
             
 #     print(str(fitness)+"-->"+str(individual))
     return fitness
 
 
-def selection_and_reproduction(population, paises):
+def selection_and_reproduction(population):
     """
         Puntua todos los elementos de la poblacion (population) y se queda con los mejores
         guardandolos dentro de 'selected'.
@@ -78,17 +78,14 @@ def selection_and_reproduction(population, paises):
         Por ultimo muta a los individuos.
   
     """
-    fitness = [ (get_fitness(i,n), i) for i in population] #Calcula el fitness de cada individuo, y lo guarda en pares ordenados de la forma (5 , [1,2,1,1,4,1,8,9,4,1])
-    fitness = [i[1] for i in sorted(fitness, reverse=True)] #Ordena los pares ordenados y se queda solo con el array de valores
-    population = fitness
   
-    selected =  fitness[(len(fitness)-pressure):] #Esta linea selecciona los 'n' individuos del final, donde n viene dado por 'pressure'
-    pprint =[(get_fitness(i,n), i) for i in selected]
+    selected =  get_best(population) #Esta linea selecciona los n/3 mejores individuos
+    pprint =[(get_fitness(i), i) for i in selected]
     print("Seleccion:\n%s"%(pprint)) #Se muestra la seleccion
     
     #Se mezcla el material genetico para crear nuevos individuos
     for i in range(len(population)-pressure):
-        punto = random.randint(1,paises-1) #Se elige un punto para hacer el intercambio
+        punto = random.randint(1,population[i].n-1) #Se elige un punto para hacer el intercambio
         padre = random.sample(selected, 2) #Se eligen dos padres
           
         population[i].nodes[:punto] = padre[0].nodes[:punto] #Se mezcla el material genetico de los padres en cada nuevo individuo
@@ -97,15 +94,18 @@ def selection_and_reproduction(population, paises):
     return population #El array 'population' tiene ahora una nueva poblacion de individuos, que se devuelven
 
 
-def cooldown(population, paises):
+def cooldown(population):
     for i in range(len(population)-pressure):
         ind = population[i].nodes[:]
         fitness_previous = 1000000000
         temperature = TEMPERATURE_START
           
         while temperature > TEMPERATURE_END:
-            mutated = mute(ind, paises)
-            fitness_new = get_fitness(population[i], paises)
+            mutated = mute(ind, population[i].n)
+            graph = Graph(population[i].n)
+            graph.set_edges(R_EDGES)
+            graph.set_nodes(ind)
+            fitness_new = get_fitness(graph)
             difference = fitness_new-fitness_previous
             if difference < 0 or math.exp(-difference/temperature)>random.random():
                 fitness_previous=fitness_new
@@ -117,8 +117,8 @@ def cooldown(population, paises):
     return population
             
 
-def mute(ind, paises):
-    punto = random.randint(0,paises-1) #Se elgie un punto al azar
+def mute(ind, n):
+    punto = random.randint(0,n-1) #Se elgie un punto al azar
     nuevo_valor = random.randint(1,3) #y un nuevo valor para este punto
     #Es importante mirar que el nuevo valor no sea igual al viejo
     while nuevo_valor == ind[punto]:
@@ -137,32 +137,34 @@ def final(population):
     return res
 
 
-def get_solutions(population):
-    solutions = []
-    for p in population:
-        if p[0]==0:
-            solutions.append(p)
-    return solutions
+def get_best(population):
+    fitness = [ (get_fitness(i), i) for i in population] #Calcula el fitness de cada individuo, y lo guarda en pares ordenados de la forma (5 , [1,2,1,1,4,1,8,9,4,1])
+    fitness = [i[1] for i in sorted(fitness, reverse=True)] #Ordena los pares ordenados y se queda solo con el array de valores
+    population = fitness
+  
+    selected =  fitness[(len(fitness)-pressure):] #Esta linea selecciona los 'n' individuos del final, donde n viene dado por 'pressure'
+    
+    return selected
     
 
 population = create_population(n)#Inicializar una poblacion
-pprint =[(get_fitness(i,n), i) for i in population]
+pprint =[(get_fitness(i), i) for i in population]
 print("Poblacion Inicial:\n%s"%(pprint)) #Se muestra la poblacion inicial
 print("\n")
 
    
 #Se evoluciona la poblacion
 for i in range(100):
-    population = selection_and_reproduction(population,n)
-    population = cooldown(population, n)
+    population = selection_and_reproduction(population)
+    population = cooldown(population)
     
-    pprint =[(get_fitness(j,n), j) for j in population]
+    pprint =[(get_fitness(j), j) for j in population]
     print("Generacion "+str(i+1)+":\n%s"%(pprint))
     if final(pprint):
         break
    
    
 print("\nPoblacion Final:\n%s"%(pprint)) #Se muestra la poblacion evolucionada
-print("\nMejores soluciones:\n%s"%(get_solutions(pprint)))
+print("\nMejores soluciones:\n%s"%([(get_fitness(j), j) for j in get_best(population)]))
 print("\n\n")
 

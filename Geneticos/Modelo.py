@@ -15,7 +15,10 @@ class Graph:
         self.nodes=[]
         for n in nodes:
             self.nodes.append(Node(n))
-        
+            
+    def set_edges(self, edges):
+        self.edges=edges
+
     def new_edge(self, i, j):
         self.edges.append(Edge(i,j))
         
