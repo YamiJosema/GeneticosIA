@@ -79,7 +79,11 @@ def selection_and_reproduction(population):
   
     """
   
-    selected =  get_best(population) #Esta linea selecciona los n/3 mejores individuos
+    fitness = [ (get_fitness(i), i) for i in population] #Calcula el fitness de cada individuo, y lo guarda en pares ordenados de la forma (5 , [1,2,1,1,4,1,8,9,4,1])
+    fitness = [i[1] for i in sorted(fitness, reverse=True)] #Ordena los pares ordenados y se queda solo con el array de valores
+    population = fitness
+  
+    selected =  fitness[(len(fitness)-pressure):] #Esta linea selecciona los 'n' individuos del final, donde n viene dado por 'pressure'
     pprint =[(get_fitness(i), i) for i in selected]
     print("Seleccion:\n%s"%(pprint)) #Se muestra la seleccion
     
