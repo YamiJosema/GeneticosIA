@@ -1,7 +1,6 @@
 import random
-from Geneticos.Modelo import *
+from Enfriamiento.Modelo import *
 import math
-import csv
 
 n = 10 #numero de paises. Podra ser variable
 k = 3 #numero de colores
@@ -111,7 +110,7 @@ def cooldown(population):
             graph.set_nodes(ind)
             fitness_new = get_fitness(graph)
             difference = fitness_new-fitness_previous
-            if difference < 0 or math.exp(-difference/temperature)>random.random():
+            if difference < 0 or math.exp(-difference/temperature)>random.random(): #Meter opción de decir cuanto mejora para aceptarla
                 fitness_previous=fitness_new
                 ind = mutated
             temperature *= COOLING_FACTOR

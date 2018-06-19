@@ -1,11 +1,11 @@
 import random
 
 class Graph:
-    def __init__(self,n):
+    def __init__(self,n,k):
         self.n=n
         self.nodes=[]
         for i in range(n):
-            self.new_node(random.randint(1, 3))
+            self.new_node(random.randint(1, k))
         self.edges=[]
         
     def new_node(self, color):

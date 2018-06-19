@@ -1,5 +1,5 @@
 import random
-from Geneticos.Modelo import *
+from Enfriamiento.Modelo import *
 
 n = 10 #numero de paises. Podra ser variable
 k = 3 #numero de colores
