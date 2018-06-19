@@ -172,7 +172,8 @@ def algoritmo_random(paises, colores):
     print("Poblacion Inicial:\n%s"%(pprint)) #Se muestra la poblacion inicial
     print("\n")
     
-    text.insert(INSERT, "Poblacion Inicial:\n")
+    text.insert(INSERT, "Numero de Paises = "+str(paises)+"\nNumero de Colores = "+str(colores))
+    text.insert(INSERT, "\nPoblacion Inicial:\n")
     for row in pprint:
         text.insert(INSERT, row)
         text.insert(INSERT,"\n")
@@ -191,7 +192,7 @@ def algoritmo_random(paises, colores):
     print("\nMejores soluciones:\n%s"%([(get_fitness(j), j) for j in get_best(population, paises)]))
     print("\n\n")
     
-    text.insert(INSERT, "Mejores Soluciones con "+str(i)+" iteraciones:\n")
+    text.insert(INSERT, "Mejores Soluciones con "+str(i+1)+" iteraciones:\n")
     text.insert(INSERT, "")
     
     for row in get_best(population, paises):         
@@ -212,9 +213,14 @@ def algoritmo_variable():
     entrada2=Entry(busqueda, bd=5)
 
     def buttCallBack():
-        paises=int(entrada1.get())
-        colores=int(entrada2.get())
-        algoritmo_random(paises, colores)
+        paises=entrada1.get()
+        colores=entrada2.get()
+        if paises=='':
+            paises=10
+        if colores=='':
+            colores=3
+        algoritmo_random(int(paises), int(colores))
+        
         
     butt=Tkinter.Button(busqueda, text="Ejecutar", command = buttCallBack)
     
@@ -239,17 +245,6 @@ def principal():
     dm.add_command(label="Variable", command=algoritmo_variable)
     dm.add_command(label="Salir", command=top.destroy)
     menubar.add_cascade(label="Algoritmo", menu=dm)
-    
-#     bm = Menu(menubar, tearoff=0)
-#     bm.add_command(label="Tema")
-#     bm.add_command(label="Autor")
-#     bm.add_command(label="Fecha")
-#     menubar.add_cascade(label="Buscar", menu=bm)
-#     
-#     em = Menu(menubar, tearoff=0)
-#     em.add_command(label="Temas mas populares")
-#     em.add_command(label="Temas mas activos")
-#     menubar.add_cascade(label="Estadisticas")
     
     top.config(menu=menubar)
     
