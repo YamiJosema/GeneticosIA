@@ -1,27 +1,36 @@
 import Tkinter
 from Tkinter import *
 import tkMessageBox
+import operator
+import PIL
+from PIL import ImageTk
+import PIL.Image
+import matplotlib.pyplot as plt
+import networkx
 
 import random
+from random import shuffle
 from Enfriamiento.Modelo import *
 import math
 
-# n = 10 #numero de paises. Podra ser variable
-# k = 3 #numero de colores
-#el gen sera una lista en las que i=pais y lista[i]=color
+from matplotlib import colors as mcolors
 
 TEMPERATURE_START = 8
 TEMPERATURE_END = 0.1
 COOLING_FACTOR = 0.999
 EDGE_CHANCE = 0.15
 R_EDGES = []
-
+Colores=[] #'red','blue','yellow','green','black','white','brown','orange','pink','purple','grey'
   
-# modelo = [1,2,3,2,1,2,3,1,2,3] #Objetivo a alcanzar
-# largo = 10 #La longitud del material genetico de cada individuo
-# pressure = int(n/3) #Cuantos individuos se seleccionan para reproduccion. Necesariamente mayor que 2
-#pressure deber ser un 30% del total de individuos
 mutation_chance = 0.1 #La probabilidad de que un individuo mute
+
+
+def cargar_colores():
+    colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
+    for c in colors:
+        Colores.append(c)
+    shuffle(Colores)
+
 
 def edges(paises):
     """
@@ -77,7 +86,7 @@ def get_fitness(individual):
     return fitness
 
 
-def selection_and_reproduction(population, paises, poblacion):
+def selection_and_reproduction(population, poblacion):
     """
         
         Puntua todos los elementos de la poblacion (population) y se queda con los mejores
@@ -156,7 +165,7 @@ def final(population):
     return res
 
 
-def get_best(population, paises, poblacion):
+def get_best(population, poblacion):
     pressure=int(poblacion/3)
     
     fitness = [ (get_fitness(i), i) for i in population] #Calcula el fitness de cada individuo, y lo guarda en pares ordenados de la forma (5 , [1,2,1,1,4,1,8,9,4,1])
@@ -189,7 +198,7 @@ def algoritmo_random(paises, colores, poblacion):
     
     #Se evoluciona la poblacion
     for i in range(100):
-        population = selection_and_reproduction(population, paises, poblacion)
+        population = selection_and_reproduction(population, poblacion)
         population = cooldown(population, colores, poblacion)
      
         pprint =[(get_fitness(j), j) for j in population]
@@ -198,22 +207,54 @@ def algoritmo_random(paises, colores, poblacion):
             break
     
     print("\nPoblacion Final:\n%s"%(pprint)) #Se muestra la poblacion evolucionada
-    print("\nMejores soluciones:\n%s"%([(get_fitness(j), j) for j in get_best(population, paises, poblacion)]))
+    print("\nMejores soluciones:\n%s"%([(get_fitness(j), j) for j in get_best(population, poblacion)]))
     print("\n\n")
     
     text.insert(INSERT, "Mejores Soluciones con "+str(i+1)+" iteraciones:\n")
     text.insert(INSERT, "")
     
-    for row in get_best(population, paises, poblacion):         
+    for row in get_best(population, poblacion):         
         text.insert(INSERT, row)
         fitness = get_fitness(row)
         text.insert(INSERT, " Fiteness = "+str(fitness)+"\n")
         
+    #Representamos el grafo
+    solucion_a_dibujar = get_best(population, poblacion)[-1]
+    GrafoParaDibujar,mapa_colores = ConvertirParaDibujar(solucion_a_dibujar)
+    pos = networkx.spring_layout(GrafoParaDibujar)
+    
+    #Dibujamos el grafo y lo guardamos como PNG
+    networkx.draw(GrafoParaDibujar,pos,node_color=mapa_colores,with_labels=True)
+    plt.savefig("Graph.png", format="PNG")
+    plt.clf()
+    
+    #Cargamos el grafo que acabamos de guardar y lo pintamos
+    imgn = PIL.ImageTk.PhotoImage(PIL.Image.open("Graph.png"))
+    
+    panel = Toplevel()
+    grafoo = Label(panel, image = imgn)
+        
     sc = Scrollbar(toplevel)
     sc.pack(side=RIGHT, fill=Y)
+    
+    grafoo.pack(side = "bottom", fill = "both", expand = "yes")
 
     text.pack()
     toplevel.mainloop()
+    
+#Aqui pasamos de nuestro tipo de grafo a uno que podamos usar para imprimir y dibujar por pantalla:
+def ConvertirParaDibujar(Grafito):
+    GrafoParaDibujar = networkx.Graph()
+    color_map=[]
+    for i in  range(0,len(Grafito.nodes)):
+        GrafoParaDibujar.add_node(i) #Cogemos los nodos de nuestro grafo y los anadimos al nuevo
+        color_map.append(Colores[Grafito.nodes[i].color]) #Anadimos cada color de cada nodo al mapa de colores del grafo
+    for i in range(0,len(Grafito.nodes)):
+        for arista in R_EDGES:
+            if i == arista.i:
+                #Para cada nodo cogemos SUS aristas (sus aristas seran las que sean iguales en nodo_a) y las anadimos al grafo
+                GrafoParaDibujar.add_edge(i,arista.j)
+    return GrafoParaDibujar,color_map
     
 
 def algoritmo_variable():
@@ -262,6 +303,8 @@ def algoritmo_variable():
     
 
 def principal():
+    cargar_colores()
+    
     top = Tkinter.Tk()
      
     menubar = Menu(top)
