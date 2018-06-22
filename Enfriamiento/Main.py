@@ -17,8 +17,8 @@ from matplotlib import colors as mcolors
 
 TEMPERATURE_START = 8
 TEMPERATURE_END = 0.1
-COOLING_FACTOR = 0.999
-EDGE_CHANCE = 0.15
+COOLING_FACTOR = 0.999 
+EDGE_CHANCE = 0.15 #La probabilidad de que se cree un arista
 R_EDGES = []
 Colores=[] #'red','blue','yellow','green','black','white','brown','orange','pink','purple','grey'
   
@@ -88,7 +88,6 @@ def get_fitness(individual):
 
 def selection_and_reproduction(population, poblacion):
     """
-        
         Puntua todos los elementos de la poblacion (population) y se queda con los mejores
         guardandolos dentro de 'selected'. El numero de seleccionados sera una tercera parte
         del total del a poblacion.
@@ -97,7 +96,6 @@ def selection_and_reproduction(population, poblacion):
         modificar).
   
         Por ultimo muta a los individuos.
-  
     """
     pressure=int(poblacion/3)
   
@@ -121,6 +119,9 @@ def selection_and_reproduction(population, poblacion):
 
 
 def cooldown(population, colores, poblacion):
+    """
+        Enfriamiento Simulado. Partiendo de una temperatura inicial, iremos generando, siempre y cuando el fitness haya mejorado, lo sustituiremos 
+    """
     pressure=int(poblacion/3)
     
     for i in range(len(population)-pressure):
@@ -146,6 +147,9 @@ def cooldown(population, colores, poblacion):
             
 
 def mute(ind, paises, colores):
+    """
+        Muta al individuo. Cambiando al hazar el color de uno de los nodos
+    """
     punto = random.randint(0,paises-1) #Se elgie un punto al azar
     nuevo_valor = random.randint(1,colores) #y un nuevo valor para este punto
     #Es importante mirar que el nuevo valor no sea igual al viejo
@@ -157,6 +161,9 @@ def mute(ind, paises, colores):
 
 
 def final(population):
+    """
+        Devolvera TRUE si hay algun individuo con fitnes 0 en la poblacion
+    """
     res = False
     for p in population:
         if p[0]==0:
@@ -166,6 +173,9 @@ def final(population):
 
 
 def get_best(population, poblacion):
+    """
+        Devuelve los n mejores individuos de una poblacion. El valor de n viene definido por pressure
+    """
     pressure=int(poblacion/3)
     
     fitness = [ (get_fitness(i), i) for i in population] #Calcula el fitness de cada individuo, y lo guarda en pares ordenados de la forma (5 , [1,2,1,1,4,1,8,9,4,1])
