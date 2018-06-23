@@ -10,7 +10,7 @@ import networkx
 
 import random
 from random import shuffle
-from Enfriamiento.Modelo import *
+from Modelo import *
 import math
 
 from matplotlib import colors as mcolors
