@@ -120,7 +120,7 @@ def selection_and_reproduction(population, poblacion):
 
 def cooldown(population, colores, poblacion):
     """
-        Enfriamiento Simulado. Partiendo de una temperatura inicial, iremos generando, siempre y cuando el fitness haya mejorado, lo sustituiremos 
+        Enfriamiento Simulado. Partiendo de una temperatura inicial, iremos generando vecinoso y siempre y cuando el fitness haya mejorado, lo sustituiremos 
     """
     pressure=int(poblacion/3)
     
